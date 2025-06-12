@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # PHP Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: monthly-service-app
+    restart: unless-stopped
+    volumes:
+      - ./:/var/www/html
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - monthly-service-network
+    depends_on:
+      - mysql
+    environment:
+      - "DB_HOST=mysql"
+      - "DB_NAME=${DB_NAME}"
+      - "DB_USER=${DB_USER}"
+      - "DB_PASS=${DB_PASS}"
+
+  # Web Server
+  nginx:
+    image: nginx:1.21-alpine
+    container_name: monthly-service-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+      - ./docker/nginx/ssl:/etc/nginx/ssl
+    networks:
+      - monthly-service-network
+    depends_on:
+      - app
+
+  # Database
+  mysql:
+    image: mysql:8.0
+    container_name: monthly-service-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      - "MYSQL_DATABASE=${MYSQL_DATABASE}"
+      - "MYSQL_USER=${MYSQL_USER}"
+      - "MYSQL_PASSWORD=${MYSQL_PASSWORD}"
+      - "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/my.cnf
+      - ./src/config/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - monthly-service-network
+
+  # PHPMyAdmin (Optional)
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: monthly-service-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      - "PMA_HOST=mysql"
+      - "PMA_USER=${DB_USER}"
+      - "PMA_PASSWORD=${DB_PASS}"
+    networks:
+      - monthly-service-network
+    depends_on:
+      - mysql
+
+networks:
+  monthly-service-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+    driver: local

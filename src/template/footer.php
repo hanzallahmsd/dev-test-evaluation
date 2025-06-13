@@ -68,5 +68,9 @@
 
 <!-- JavaScript -->
 <script src="assets/js/main.js"></script>
+<script src="assets/js/contact-form.js"></script>
+<?php if (isset($additionalCss)): // If auth modal CSS is included, also include the JS ?>
+<script src="assets/js/auth-modal.js"></script>
+<?php endif; ?>
 </body>
 </html>

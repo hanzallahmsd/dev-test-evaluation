@@ -109,6 +109,10 @@ function generateCsrfToken() {
     return csrf_field();
 }
 
+function validateCsrfToken($token) {
+    return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+}
+
 // Flash messages
 function flash($key, $message = null) {
     if ($message) {
@@ -118,4 +122,21 @@ function flash($key, $message = null) {
         unset($_SESSION['flash'][$key]);
         return $message;
     }
+}
+
+// Redirect helper function
+function redirect($path) {
+    $base_url = config('app.url');
+    header("Location: {$base_url}{$path}");
+    exit;
+}
+
+// Check if flash message exists
+function hasFlash($key) {
+    return isset($_SESSION['flash'][$key]);
+}
+
+// Get flash message
+function getFlash($key) {
+    return flash($key);
 }

@@ -80,4 +80,26 @@ class Product extends BaseModel
         ]);
         return $stmt->fetch();
     }
+    
+    /**
+     * Get products by type and billing interval
+     * 
+     * @param string $type 'small', 'medium', or 'large'
+     * @param string $interval 'month' or 'year'
+     * @return array
+     */
+    public function getByTypeAndInterval($type, $interval)
+    {
+        $stmt = db()->prepare("
+            SELECT * FROM {$this->table} 
+            WHERE type = :type AND billing_interval = :interval AND active = :active
+            ORDER BY price ASC
+        ");
+        $stmt->execute([
+            'type' => $type,
+            'interval' => $interval,
+            'active' => 1
+        ]);
+        return $stmt->fetchAll();
+    }
 }

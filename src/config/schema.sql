@@ -60,8 +60,23 @@ CREATE TABLE IF NOT EXISTS products (
 
 -- Insert default admin user (password: admin123)
 INSERT INTO users (email, password, first_name, last_name, role)
-VALUES ('admin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin', 'User', 'admin')
+VALUES ('admin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi', 'Admin', 'User', 'admin')
 ON DUPLICATE KEY UPDATE id = id;
+
+-- Clear products table before inserting default products
+TRUNCATE TABLE products;
+
+-- Contact Messages table
+CREATE TABLE IF NOT EXISTS contact_messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    subject VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    status ENUM('new', 'read', 'replied') NOT NULL DEFAULT 'new',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 
 -- Insert default products
 INSERT INTO products (name, description, price, stripe_product_id, stripe_price_id, type, billing_interval)
@@ -71,5 +86,4 @@ VALUES
 ('Large Plan', 'Premium service package for established businesses', 100.00, 'prod_large_monthly', 'price_large_monthly', 'large', 'month'),
 ('Small Plan (Annual)', 'Basic service package for small businesses, billed annually', 648.00, 'prod_small_yearly', 'price_small_yearly', 'small', 'year'),
 ('Medium Plan (Annual)', 'Enhanced service package for growing businesses, billed annually', 864.00, 'prod_medium_yearly', 'price_medium_yearly', 'medium', 'year'),
-('Large Plan (Annual)', 'Premium service package for established businesses, billed annually', 1080.00, 'prod_large_yearly', 'price_large_yearly', 'large', 'year')
-ON DUPLICATE KEY UPDATE id = id;
+('Large Plan (Annual)', 'Premium service package for established businesses, billed annually', 1080.00, 'prod_large_yearly', 'price_large_yearly', 'large', 'year');

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M190.5 250.5C260.423 250.5 317 193.923 317 124C317 54.0771 260.423 -2.5 190.5 -2.5C120.577 -2.5 64 54.0771 64 124C64 193.923 120.577 250.5 190.5 250.5Z" fill="#F3F3F3" stroke="#E0E0E0"/>
+  <path d="M322.241 224.5H103.759C101.132 224.5 99 222.368 99 219.741V92.2593C99 89.6321 101.132 87.5 103.759 87.5H322.241C324.868 87.5 327 89.6321 327 92.2593V219.741C327 222.368 324.868 224.5 322.241 224.5Z" fill="white" stroke="#E0E0E0"/>
+  <path d="M322.241 224.5H103.759C101.132 224.5 99 222.368 99 219.741V92.2593C99 89.6321 101.132 87.5 103.759 87.5H322.241C324.868 87.5 327 89.6321 327 92.2593V219.741C327 222.368 324.868 224.5 322.241 224.5Z" fill="white" stroke="#E0E0E0"/>
+  <path d="M327 92.2593V219.741C327 222.368 324.868 224.5 322.241 224.5H103.759C101.132 224.5 99 222.368 99 219.741V92.2593C99 89.6321 101.132 87.5 103.759 87.5H322.241C324.868 87.5 327 89.6321 327 92.2593Z" fill="white" stroke="#E0E0E0"/>
+  <rect x="129" y="117.5" width="168" height="8" rx="4" fill="#E0E0E0"/>
+  <rect x="129" y="137.5" width="168" height="8" rx="4" fill="#E0E0E0"/>
+  <rect x="129" y="157.5" width="168" height="8" rx="4" fill="#E0E0E0"/>
+  <rect x="129" y="177.5" width="168" height="8" rx="4" fill="#E0E0E0"/>
+  <circle cx="213" cy="156" r="40" fill="#FF6B6B" fill-opacity="0.2"/>
+  <path d="M213 136V176" stroke="#FF6B6B" stroke-width="4" stroke-linecap="round"/>
+  <path d="M233 156L193 156" stroke="#FF6B6B" stroke-width="4" stroke-linecap="round"/>
+  <path d="M213 196C235.091 196 253 178.091 253 156C253 133.909 235.091 116 213 116C190.909 116 173 133.909 173 156C173 178.091 190.909 196 213 196Z" stroke="#FF6B6B" stroke-width="2"/>
+  <path d="M129 197.5H297" stroke="#E0E0E0" stroke-dasharray="4 4"/>
+  <circle cx="143" cy="197.5" r="8" fill="#4A6CF7"/>
+  <path d="M140 197.5L143 200.5L147 195.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

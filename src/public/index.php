@@ -4,22 +4,32 @@
  */
 require_once '../bootstrap.php';
 
-// Default to monthly billing
+// Default to monthly billing for display purposes
 $billingInterval = isset($_GET['billing']) && $_GET['billing'] === 'yearly' ? 'year' : 'month';
 
-// Get active products for pricing section based on billing interval
+// Get all active products for pricing section (both monthly and yearly)
 $productModel = new \Models\Product();
-$allProducts = $productModel->getActiveByInterval($billingInterval);
+$allProducts = array_merge(
+    $productModel->getActiveByInterval('month'),
+    $productModel->getActiveByInterval('year')
+);
 
-// Filter to get only one product per type
-$products = [];
-$seenTypes = [];
+// Organize products by type to ensure we have both monthly and yearly options
+$productsByType = [];
 foreach ($allProducts as $product) {
-    if (!in_array($product['type'], $seenTypes)) {
+    $productsByType[$product['type']][$product['billing_interval']] = $product;
+}
+
+// Flatten the array for display
+$products = [];
+foreach ($productsByType as $type => $intervals) {
+    foreach ($intervals as $interval => $product) {
         $products[] = $product;
-        $seenTypes[] = $product['type'];
     }
 }
+
+//// Add auth modal CSS
+$additionalCss = '<link rel="stylesheet" href="assets/css/auth-modal.css">';
 
 // Include header
 include_once '../template/header.php';
@@ -37,8 +47,22 @@ include_once '../template/header.php';
                     <a href="#features" class="btn btn-outline scroll-link">Learn More</a>
                 </div>
             </div>
-            <div class="hero-image">
-                <img src="/assets/images/hero-image.svg" alt="Subscription Services">
+            <div class="hero-video">
+                <div class="video-thumbnail" data-video-id="XZmGGAbHqa0">
+                    <div class="play-button">
+                        <i class="fas fa-play"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Video Modal -->
+    <div id="videoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="video-container">
+                <iframe id="videoFrame" width="100%" height="100%" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             </div>
         </div>
     </div>
@@ -135,7 +159,7 @@ include_once '../template/header.php';
                 $cardClass = $featured ? 'pricing-card featured' : 'pricing-card';
                 ?>
                 
-                <div class="<?= $cardClass ?>">
+                <div class="<?= $cardClass ?>" data-interval="<?= $product['billing_interval'] ?>">
                     <div class="pricing-header <?= $featured ? 'featured-header' : '' ?>">
                         <h3 class="pricing-title"><?= htmlspecialchars(ucfirst($product['type'])) ?></h3>
                         <p class="pricing-subtitle"><?= $product['billing_interval'] === 'month' ? 'Monthly' : 'Annual' ?> Billing</p>
@@ -169,9 +193,15 @@ include_once '../template/header.php';
                             <?php endif; ?>
                         </ul>
                         
-                        <a href="/checkout.php?product_id=<?= $product['id'] ?>" class="btn <?= $featured ? 'btn-primary' : 'btn-outline' ?>">
-                            <?= $featured ? 'Get Started' : 'Choose Plan' ?>
-                        </a>
+                        <?php if (isset($_SESSION['user_id'])): ?>
+                            <a href="/subscribe.php?price_id=<?= $product['stripe_price_id'] ?>" class="btn <?= $featured ? 'btn-primary' : 'btn-outline' ?>">
+                                <?= $featured ? 'Get Started' : 'Choose Plan' ?>
+                            </a>
+                        <?php else: ?>
+                            <a href="#" class="btn <?= $featured ? 'btn-primary' : 'btn-outline' ?> open-login-modal">
+                                Login to Subscribe
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -192,7 +222,7 @@ include_once '../template/header.php';
         </div>
         
         <div class="contact-card">
-            <div class="contact-info">
+            <div class="contact-info consultant-bg">
                 <h3 class="contact-info-title">Contact Information</h3>
                 
                 <div class="contact-details">
@@ -234,7 +264,23 @@ include_once '../template/header.php';
             <div class="contact-form">
                 <h3 class="contact-form-title">Send Us a Message</h3>
                 
-                <form action="/contact.php" method="POST">
+                <!-- Success message -->
+                <div id="contact-success" class="flash-message flash-success" style="display: none;">
+                    <div class="flash-content">
+                        <i class="fas fa-check-circle"></i>
+                        <p></p>
+                    </div>
+                </div>
+                
+                <!-- Error message -->
+                <div id="contact-error" class="flash-message flash-error" style="display: none;">
+                    <div class="flash-content">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p></p>
+                    </div>
+                </div>
+                
+                <form id="contact-form">
                     <?= generateCsrfToken() ?>
                     
                     <div class="form-row">
@@ -259,11 +305,121 @@ include_once '../template/header.php';
                         <textarea id="message" name="message" rows="5" required></textarea>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary">Send Message</button>
+                    <button type="submit" id="contact-submit" class="btn btn-primary">Send Message</button>
                 </form>
             </div>
         </div>
     </div>
 </section>
+
+<!-- Login Modal -->
+<div class="auth-modal" id="login-modal">
+    <div class="auth-modal-container">
+        <button class="auth-close">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <div class="auth-modal-left">
+            <div class="auth-modal-logo"><?= config('app.name') ?></div>
+            <img src="assets/images/login-illustration.svg" alt="Login" class="auth-modal-image">
+            <p>Welcome back! Access your account to manage your subscriptions.</p>
+        </div>
+        
+        <div class="auth-modal-right">
+            <h2 class="auth-modal-title">Log In</h2>
+            <p class="auth-modal-subtitle">Enter your credentials to access your account</p>
+            
+            <div id="login-error" class="flash-message flash-error" style="display: none;">
+                <div class="flash-content">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p></p>
+                </div>
+            </div>
+            
+            <form id="login-form" class="auth-form">
+                <div class="auth-form-group">
+                    <label for="login-email">Email Address</label>
+                    <input type="email" id="login-email" name="email" required>
+                </div>
+                
+                <div class="auth-form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" name="password" required>
+                </div>
+                
+                <div class="auth-form-checkbox">
+                    <input type="checkbox" id="remember" name="remember">
+                    <label for="remember">Remember me</label>
+                </div>
+                
+                <button type="submit" class="auth-form-submit">Log In</button>
+                
+                <div class="auth-form-footer">
+                    Don't have an account? <a href="#" id="switch-to-register">Sign Up</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Register Modal -->
+<div class="auth-modal" id="register-modal">
+    <div class="auth-modal-container">
+        <button class="auth-close">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <div class="auth-modal-left">
+            <div class="auth-modal-logo"><?= config('app.name') ?></div>
+            <img src="assets/images/register-illustration.svg" alt="Register" class="auth-modal-image">
+            <p>Join our platform and discover premium subscription services for your business.</p>
+        </div>
+        
+        <div class="auth-modal-right">
+            <h2 class="auth-modal-title">Sign Up</h2>
+            <p class="auth-modal-subtitle">Create your account to get started</p>
+            
+            <div id="register-error" class="flash-message flash-error" style="display: none;">
+                <div class="flash-content">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p></p>
+                </div>
+            </div>
+            
+            <form id="register-form" class="auth-form">
+                <div class="auth-form-group">
+                    <label for="register-first-name">First Name</label>
+                    <input type="text" id="register-first-name" name="first_name" required>
+                </div>
+                
+                <div class="auth-form-group">
+                    <label for="register-last-name">Last Name</label>
+                    <input type="text" id="register-last-name" name="last_name" required>
+                </div>
+                
+                <div class="auth-form-group">
+                    <label for="register-email">Email Address</label>
+                    <input type="email" id="register-email" name="email" required>
+                </div>
+                
+                <div class="auth-form-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" name="password" required>
+                </div>
+                
+                <div class="auth-form-checkbox">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <label for="terms">I agree to the <a href="/terms.php">Terms of Service</a> and <a href="/privacy.php">Privacy Policy</a></label>
+                </div>
+                
+                <button type="submit" class="auth-form-submit">Sign Up</button>
+                
+                <div class="auth-form-footer">
+                    Already have an account? <a href="#" id="switch-to-login">Log In</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <?php include_once '../template/footer.php'; ?>

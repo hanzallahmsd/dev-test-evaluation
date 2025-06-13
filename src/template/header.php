@@ -13,6 +13,8 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
     
+    <?php if (isset($additionalCss)) echo $additionalCss; ?>
+    
     <!-- Poppins Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,6 +24,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+
+<!-- Preloader -->
+<div class="preloader">
+    <div class="loader">
+        <div class="spinner"></div>
+    </div>
+</div>
 
 <?php if (isset($_SESSION['user_id'])): ?>
     <!-- Logged in navigation -->
@@ -75,16 +84,16 @@
             </div>
             
             <div class="navbar-menu" id="navbar-menu">
-                <a href="/#features" class="navbar-link scroll-link">Features</a>
-                <a href="/#pricing" class="navbar-link scroll-link">Pricing</a>
-                <a href="/#contact" class="navbar-link scroll-link">Contact</a>
+                <a href="#features" class="navbar-link scroll-link">Features</a>
+                <a href="#pricing" class="navbar-link scroll-link">Pricing</a>
+                <a href="#contact" class="navbar-link scroll-link">Contact</a>
             </div>
             
             <div class="navbar-actions">
-                <a href="/login.php" class="btn btn-outline">
+                <a href="#" class="btn btn-outline open-login-modal">
                     <i class="fas fa-sign-in-alt"></i> Login
                 </a>
-                <a href="/#pricing" class="btn btn-primary scroll-link">
+                <a href="#" class="btn btn-primary open-register-modal">
                     <i class="fas fa-rocket"></i> Get Started
                 </a>
             </div>
@@ -122,10 +131,32 @@
                     <i class="fas <?= $icon ?>"></i>
                     <p><?= htmlspecialchars($message) ?></p>
                 </div>
+                <button class="flash-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <?php unset($_SESSION['flash'][$type]); ?>
         <?php endforeach; ?>
     </div>
+    
+    <script>
+    // Auto-dismiss flash messages after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+        const flashMessages = document.querySelectorAll('.flash-message');
+        if (flashMessages.length > 0) {
+            setTimeout(function() {
+                flashMessages.forEach(function(message) {
+                    message.style.opacity = '0';
+                    setTimeout(function() {
+                        if (message.parentNode) {
+                            message.parentNode.removeChild(message);
+                        }
+                    }, 300); // Wait for fade out animation
+                });
+            }, 5000); // 5 seconds
+        }
+    });
+    </script>
 <?php endif; ?>
 
 <main>

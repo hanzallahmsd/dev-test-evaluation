@@ -169,4 +169,52 @@ class Invoice extends BaseModel
         
         return $stmt->fetchAll();
     }
+    
+    /**
+     * Get paginated invoices for a specific user
+     * 
+     * @param int $userId
+     * @param int $page
+     * @param int $limit
+     * @return array
+     */
+    public function getPaginatedForUser($userId, $page = 1, $limit = 10)
+    {
+        $filters = ['user_id' => $userId];
+        $result = $this->getPaginated($page, $limit, $filters);
+        return $result['data'];
+    }
+    
+    /**
+     * Count total invoices for a specific user
+     * 
+     * @param int $userId
+     * @return int
+     */
+    public function countForUser($userId)
+    {
+        $query = "SELECT COUNT(*) as total FROM {$this->table} WHERE user_id = :user_id";
+        $stmt = db()->prepare($query);
+        $stmt->bindParam(':user_id', $userId, \PDO::PARAM_INT);
+        $stmt->execute();
+        $result = $stmt->fetch();
+        return (int)$result['total'];
+    }
+    
+    /**
+     * Get recent invoices for a user
+     * 
+     * @param int $userId
+     * @param int $limit
+     * @return array
+     */
+    public function getRecentForUser($userId, $limit = 3)
+    {
+        $query = "SELECT * FROM {$this->table} WHERE user_id = :user_id ORDER BY invoice_date DESC LIMIT :limit";
+        $stmt = db()->prepare($query);
+        $stmt->bindParam(':user_id', $userId, \PDO::PARAM_INT);
+        $stmt->bindParam(':limit', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
 }

@@ -15,17 +15,19 @@ class AuthController
     /**
      * Handle login request
      * 
-     * @param array $data
-     * @return bool
+     * @param string $email
+     * @param string $password
+     * @param bool $remember
+     * @return array|bool User data on success, false on failure
      */
-    public function login($data)
+    public function login($email, $password, $remember = false)
     {
-        if (empty($data['email']) || empty($data['password'])) {
+        if (empty($email) || empty($password)) {
             flash('error', 'Please enter both email and password');
             return false;
         }
         
-        $user = $this->userModel->authenticate($data['email'], $data['password']);
+        $user = $this->userModel->authenticate($email, $password);
         
         if (!$user) {
             flash('error', 'Invalid email or password');
@@ -38,7 +40,29 @@ class AuthController
         $_SESSION['user_name'] = $user['first_name'] . ' ' . $user['last_name'];
         $_SESSION['user_role'] = $user['role'];
         
-        return true;
+        // Set remember me cookie if requested
+        if ($remember) {
+            $token = bin2hex(random_bytes(32));
+            $hashedToken = password_hash($token, PASSWORD_DEFAULT);
+            
+            // Store token in database
+            $this->userModel->update($user['id'], [
+                'remember_token' => $hashedToken
+            ]);
+            
+            // Set cookie for 30 days
+            setcookie(
+                'remember_token',
+                $token,
+                time() + (30 * 24 * 60 * 60),
+                '/',
+                '',
+                false,
+                true
+            );
+        }
+        
+        return $user;
     }
     
     /**
@@ -139,5 +163,31 @@ class AuthController
         
         flash('error', 'Registration failed');
         return false;
+    }
+    
+    /**
+     * Update user password
+     * 
+     * @param int $userId
+     * @param string $currentPassword
+     * @param string $newPassword
+     * @return bool
+     */
+    public function updatePassword($userId, $currentPassword, $newPassword)
+    {
+        // Get user
+        $user = $this->userModel->find($userId);
+        if (!$user) {
+            return false;
+        }
+        
+        // Verify current password
+        if (!password_verify($currentPassword, $user['password'])) {
+            return false;
+        }
+        
+        // Update password
+        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+        return $this->userModel->update($userId, ['password' => $hashedPassword]);
     }
 }

@@ -472,4 +472,47 @@ class AdminController
         
         return '/reports/' . $filename . '.txt';
     }
+    
+    /**
+     * Get recent subscriptions
+     * 
+     * @param int $limit Number of subscriptions to return
+     * @return array
+     */
+    public function getRecentSubscriptions($limit = 5)
+    {
+        $query = "SELECT s.*, u.email, u.first_name, u.last_name, p.name as plan_name 
+                 FROM subscriptions s 
+                 JOIN users u ON s.user_id = u.id 
+                 JOIN products p ON s.plan_type = p.type 
+                 ORDER BY s.created_at DESC 
+                 LIMIT :limit";
+        
+        $stmt = db()->prepare($query);
+        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll();
+    }
+    
+    /**
+     * Get recent invoices
+     * 
+     * @param int $limit Number of invoices to return
+     * @return array
+     */
+    public function getRecentInvoices($limit = 5)
+    {
+        $query = "SELECT i.*, u.email, u.first_name, u.last_name 
+                 FROM invoices i 
+                 JOIN users u ON i.user_id = u.id 
+                 ORDER BY i.invoice_date DESC 
+                 LIMIT :limit";
+        
+        $stmt = db()->prepare($query);
+        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll();
+    }
 }

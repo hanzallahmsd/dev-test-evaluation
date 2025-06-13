@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS products (
 
 -- Insert default admin user (password: admin123)
 INSERT INTO users (email, password, first_name, last_name, role)
-VALUES ('admin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi', 'Admin', 'User', 'admin')
+VALUES ('admin@example.com', password_hash('admin123', PASSWORD_DEFAULT), 'Admin', 'User', 'admin')
 ON DUPLICATE KEY UPDATE id = id;
 
 -- Clear products table before inserting default products

@@ -4,7 +4,7 @@ A comprehensive subscription-based service platform with Stripe integration for 
 
 ## Features
 
-- User authentication and role-based access control
+- User  authentication and role-based access control
 - Subscription management with Stripe integration
 - Admin dashboard with analytics and reporting
 - Customer self-onboarding and subscription management
